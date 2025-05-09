@@ -30,10 +30,20 @@ yPos:		.word	27		# y position
 tail:		.word	7624		# location of rail on bit map display
 appleX:		.word	32		# apple x position
 appleY:		.word	16		# apple y position
+
+
+
 snakeUp:	.word	0x0000ff00	# green pixel for when snaking moving up
 snakeDown:	.word	0x0100ff00	# green pixel for when snaking moving down
 snakeLeft:	.word	0x0200ff00	# green pixel for when snaking moving left
 snakeRight:	.word	0x0300ff00	# green pixel for when snaking moving right
+#THESE ARE USED TO ENCODE BOTH DIRECTION AND COLOR
+#0x0000(up) ff00(color green)
+#0x0100(down) ff00(color green)
+#0x0300(right) ff00(color green)
+#0x0200(left) ff00(color green)
+
+
 xConversion:	.word	64		# x value for converting xPos to bitmap display
 yConversion:	.word	4		# y value for converting (x, y) to bitmap display
 
@@ -152,7 +162,7 @@ drawBorderRight:
 	
 	add	$t1, $s2, $t0		# t1 = tail start on bit map display
 	sw	$s3, 0($t1)		# draw pixel where snake is
-	addi	$t1, $t1, -256		# set t1 to pixel above. THIS IS HOW WE MOVE
+	addi	$t1, $t1, -256		# set t1 to pixel above. THIS IS HOW WE MOVE!!!
 	sw	$s3, 0($t1)		# draw pixel where snake currently is
 
 #This creates a two-segment snake: tail at (50, 29) and another segment at (50, 28), moving toward the head at (50, 27).
@@ -203,11 +213,11 @@ drawBorderRight:
 
 gameUpdateLoop:
 
-	lw	$t3, 0xFFFF0000
-	beqz	$t3, gameUpdateLoop
-	lw	$t3, 0xffff0004	
+	lw	$t3, 0xFFFF0000 #keyboard control register in MARS, Bit 0 is set to 1 when a key is pressed (indicating input is available).
+	beqz	$t3, gameUpdateLoop#If $t3 is zero (no key pressed), branches back to gameUpdateLoop, effectively looping until input is detected.
+	lw	$t3, 0xffff0004	#a key is pressed, loads the ASCII value of the key from the keyboard data register (0xFFFF0004) into $t3
 	
-	### Sleep for 66 ms so frame rate is about 15
+	### Sleep for 66 ms so frame rate is about 15, "stops" the game so we can actually play and have time to press keys
 	addi	$v0, $zero, 32	# syscall sleep
 	addi	$a0, $zero, 66	# 66 ms
 	syscall
@@ -219,8 +229,8 @@ gameUpdateLoop:
 
 	
 moveUp:
-	lw	$s3, snakeUp	# s3 = direction of snake
-	add	$a0, $s3, $zero	# a0 = direction of snake
+	lw	$s3, snakeUp	# s3 = direction of snake, loads the value of snakeUp (0x0000ff00, green color(ff) with “up” flag(0000) into $s3.
+	add	$a0, $s3, $zero	# a0 = direction of snake, copies the value in $s3 (0x0000ff00) to $a0, $a0 is the argument register used to pass the direction/color to the updateSnake function
 	jal	updateSnake
 	
 	# move the snake
@@ -261,6 +271,9 @@ moveRight:
 exitMoving:
 	j 	gameUpdateLoop		# loop back to beginning
 
+
+
+
 # this function update the snake on the bitmap display and changes its velocity
 # Param 1 is the direction
 # code logic steps
@@ -279,6 +292,10 @@ exitMoving:
 #	update new tail base upon tail direction
 #	exit updateSnake function
 # }	
+
+
+
+
 updateSnake:
 	addiu 	$sp, $sp, -24	# allocate 24 bytes for stack
 	sw 	$fp, 0($sp)	# store caller's frame pointer

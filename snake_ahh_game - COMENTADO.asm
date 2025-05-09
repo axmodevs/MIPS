@@ -297,10 +297,18 @@ exitMoving:
 
 
 updateSnake:
-	addiu 	$sp, $sp, -24	# allocate 24 bytes for stack
-	sw 	$fp, 0($sp)	# store caller's frame pointer
-	sw 	$ra, 4($sp)	# store caller's return address
-	addiu 	$fp, $sp, 20	# setup updateSnake frame pointer
+
+	addiu 	$sp, $sp, -24	# Allocates 24 bytes of stack space for the function’s stack frame
+
+	#The 24 bytes are used to store:
+	#The caller’s frame pointer ($fp, 4 bytes).
+	#The return address ($ra, 4 bytes).
+
+
+	sw 	$fp, 0($sp)	# Preserves the caller’s frame pointer so it can be restored when updateSnake returns.
+	sw 	$ra, 4($sp)	# Preserves the return address so updateSnake can return to the caller (gameUpdateLoop).
+
+	addiu 	$fp, $sp, 20	# setup updateSnake frame pointer- TBD
 	
 	### DRAW HEAD
 	lw	$t0, xPos		# t0 = xPos of snake

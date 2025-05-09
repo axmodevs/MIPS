@@ -1,5 +1,3 @@
-# Author: Daniel Shevelev
-# Purpose: Create and run a classic game of snake in assembly
 
 ###############################################################
 ### 			BITMAP SETTINGS			    ###	
@@ -14,7 +12,9 @@
 
 .data
 
-frameBuffer: 	.space 	0x80000		#512 wide x 256 high pixels, JUST THE SIZE OF THE MEMORY FOR THE SCREEN, NOT THE ADRESS WICH IS 0x1001000. AFTER THIS WE HAVE:
+frameBuffer: 	.space 	0x80000		#512 wide x 256 high pixels, JUST THE SIZE OF THE MEMORY FOR THE SCREEN, NOT THE ADRESS WICH IS 0x1001000. ###	Base address for display 0x10010000 (static data)   ###
+
+#AFTER THIS WE HAVE:
 
 #Each .word directive allocates 4 bytes in the .data section.
 ##The assembler places these variables sequentially after the frameBuffer.
@@ -152,8 +152,17 @@ drawBorderRight:
 	
 	add	$t1, $s2, $t0		# t1 = tail start on bit map display
 	sw	$s3, 0($t1)		# draw pixel where snake is
-	addi	$t1, $t1, -256		# set t1 to pixel above
+	addi	$t1, $t1, -256		# set t1 to pixel above. THIS IS HOW WE MOVE
 	sw	$s3, 0($t1)		# draw pixel where snake currently is
+
+#This creates a two-segment snake: tail at (50, 29) and another segment at (50, 28), moving toward the head at (50, 27).
+#Why -256?
+#The value 256 corresponds to moving one unit up in the unit-based coordinate system:
+#The offset formula is (y_unit * 64 + x_unit) * 4.
+#Decreasing y_unit by 1: (y_unit - 1) * 64 + x_unit reduces the offset by 64 * 4 = 256 bytes.
+#Since the snake is moving up, the second segment is one unit higher (y=28 vs. y=29), and the address decreases by 256 bytes.
+
+
 	#addi	$t1, $t1, -256		# set t1 to pixel above
 	#sw	$s3, 0($t1)		# draw pixel where snake currently is
 	
@@ -179,6 +188,7 @@ drawBorderRight:
 # if input == s { moveDown();}	
 # if input == a { moveLeft();}	
 # if input == d { moveRigth();}	
+
 ### each move method has similar code
 # moveDirection () {
 #	dir = direction of snake
@@ -186,9 +196,11 @@ drawBorderRight:
 #	updateSnakeHeadPosition()
 #	go back to beginning of update fucntion
 # } 	
+
 # Registers:
 # t3 = key press input
 # s3 = direction of the snake
+
 gameUpdateLoop:
 
 	lw	$t3, 0xFFFF0000

@@ -53,15 +53,15 @@ main:
 
 ### DRAW BACKGROUND SECTION
 #Clarifying the Questions
-#“The screen memory is at 0x10010000 from the start”:
-#Yes, in the MARS simulator, the bitmap display’s memory is mapped to start at 0x10010000. This is where pixel data is written to update the screen.
+#â€œThe screen memory is at 0x10010000 from the startâ€�:
+#Yes, in the MARS simulator, the bitmap displayâ€™s memory is mapped to start at 0x10010000. This is where pixel data is written to update the screen.
 #The frameBuffer is allocated at this address to serve as the memory buffer for the display.
-#“The next space we reserve is for the pixels?”:
+#â€œThe next space we reserve is for the pixels?â€�:
 #The frameBuffer: .space 0x80000 reserves 524,288 bytes (0x80000) starting at 0x10010000 specifically for pixel data (512 * 256 pixels * 4 bytes per pixel).
-#This is the first allocation in the .data section, and it directly corresponds to the screen’s pixel buffer.
-#“What about the rest of .word we have in the .data”:
+#This is the first allocation in the .data section, and it directly corresponds to the screenâ€™s pixel buffer.
+#â€œWhat about the rest of .word we have in the .dataâ€�:
 #The other .word directives (xVel, yVel, etc.) are additional variables stored in the .data section after the frameBuffer. They are not part of the pixel data but are used to store game state (e.g., snake position, velocity, colors).
-#These variables are allocated in memory immediately following the frameBuffer’s 0x80000 bytes.
+#These variables are allocated in memory immediately following the frameBufferâ€™s 0x80000 bytes.
 
 	la 	$t0, frameBuffer	# load frame buffer addres
 	li 	$t1, 8192		# save 512*256 pixels
@@ -152,71 +152,6 @@ drawBorderRight:
 #Horizontal by 4
 #
 
-
-	la 	$t0, frameBuffer	# load frame buffer addres
-	#8192-128-1536
-	addi	$t0, $t0, 6528		# set pixel to be near the bottom left
-	li 	$t2, 0x00ffcc00		# load YELLOW COLOR
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-
-
-
-
-
-	la 	$t0, frameBuffer	# load frame buffer addres
-	#8192-128-1536
-	addi	$t0, $t0, 6528		# 
-	addi	$t0, $t0, 256
-
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-	sw	$t2, 0($t0)		# color YELLOW
-	addi	$t0, $t0, 4		# go to next pixe
-
-
-
-
-	la 	$t0, frameBuffer	# load frame buffer addres
-	#8192-128-1536
-	addi	$t0, $t0, 4096		# 
-	sw	$t2, 0($t0)		# color YELLOW
-	
-	
-la	$t0, frameBuffer	# t0 = 0x10010000
-addiu	$t1, $zero, 2368	# offset = (8 * 64 + 16) * 4
-addu	$t0, $t0, $t1		# t0 = 0x10010840
-sw	$t2, 0($t0)		# draw green unit at (16, 8)
-
-
-	
-	
-
 	
 
 
@@ -227,14 +162,14 @@ sw	$t2, 0($t0)		# draw green unit at (16, 8)
 
 
 	### draw initial snake section
-	la	$t0, frameBuffer	# load frame buffer address
-	lw	$s2, tail		# s2 = tail of snake,Loads the value 7624 (the initial tail offset) into $s2. This offset represents the memory location of the snake’s tail relative to frameBuffer.
-	lw	$s3, snakeUp		# s3 = direction of snake
+	#la	$t0, frameBuffer	# load frame buffer address
+	#lw	$s2, tail		# s2 = tail of snake,Loads the value 7624 (the initial tail offset) into $s2. This offset represents the memory location of the snakeâ€™s tail relative to frameBuffer.
+	#lw	$s3, snakeUp		# s3 = direction of snake
 	
-	add	$t1, $s2, $t0		# t1 = tail start on bit map display
-	sw	$s3, 0($t1)		# draw pixel where snake is
-	addi	$t1, $t1, -256		# set t1 to pixel above. THIS IS HOW WE MOVE!!!
-	sw	$s3, 0($t1)		# draw pixel where snake currently is
+	#add	$t1, $s2, $t0		# t1 = tail start on bit map display
+	#sw	$s3, 0($t1)		# draw pixel where snake is
+	#addi	$t1, $t1, -256		# set t1 to pixel above. THIS IS HOW WE MOVE!!!
+	#sw	$s3, 0($t1)		# draw pixel where snake currently is
 
 #This creates a two-segment snake: tail at (50, 29) and another segment at (50, 28), moving toward the head at (50, 27).
 #Why -256?
@@ -249,6 +184,130 @@ sw	$t2, 0($t0)		# draw green unit at (16, 8)
 	
 	### draw initial apple
 	jal 	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+	
+	jal 	newAppleLocation
+	jal	drawApple
+
+
 
 
 
@@ -281,6 +340,19 @@ sw	$t2, 0($t0)		# draw green unit at (16, 8)
 # Registers:
 # t3 = key press input
 # s3 = direction of the snake
+#t1 position
+#t2 YELLOW COLOR
+#t4 GREY COLOR
+#t5 BLACK COLOR
+#t6 RED COLOR
+
+	la	$t0, frameBuffer	# load frame buffer address
+	lw	$s2, tail
+	add	$t1, $s2, $t0		# t1 = tail start on bit map display
+	li 	$t2, 0x00ffcc00		# load YELLOW COLOR
+	li 	$t4, 0x00d3d3d3		# load GREY
+	li 	$t5, 0x00000000		# load BLACK 
+	li	$t6, 0x00ff0000		# load red
 
 gameUpdateLoop:
 
@@ -288,10 +360,14 @@ gameUpdateLoop:
 	beqz	$t3, gameUpdateLoop#If $t3 is zero (no key pressed), branches back to gameUpdateLoop, effectively looping until input is detected.
 	lw	$t3, 0xffff0004	#a key is pressed, loads the ASCII value of the key from the keyboard data register (0xFFFF0004) into $t3
 	
+	
+	
 	### Sleep for 66 ms so frame rate is about 15, "stops" the game so we can actually play and have time to press keys
 	addi	$v0, $zero, 32	# syscall sleep
 	addi	$a0, $zero, 66	# 66 ms
 	syscall
+	
+
 	
 	beq	$t3, 100, moveRight	# if key press = 'd' branch to moveright
 	beq	$t3, 97, moveLeft	# else if key press = 'a' branch to moveLeft
@@ -300,47 +376,77 @@ gameUpdateLoop:
 
 	
 moveUp:
-	lw	$s3, snakeUp	# s3 = direction of snake, loads the value of snakeUp (0x0000ff00, green color(ff) with “up” flag(0000) into $s3.
-	add	$a0, $s3, $zero	# a0 = direction of snake, copies the value in $s3 (0x0000ff00) to $a0, $a0 is the argument register used to pass the direction/color to the updateSnake function
-	jal	updateSnake
-	
-	# move the snake
-	jal 	updateSnakeHeadPosition
+
+	sw	$t4, 0($t1)		#we color the pixel we were located to background color
+	addi	$t1, $t1, -256		# set t1 to pixel above. THIS IS HOW WE MOVE!!!
+	sw	$t2, 0($t1)		# draw 1 pixel 
 	
 	j	exitMoving 	
 
 moveDown:
-	lw	$s3, snakeDown	# s3 = direction of snake
-	add	$a0, $s3, $zero	# a0 = direction of snake
-	jal	updateSnake
-	
-	# move the snake
-	jal 	updateSnakeHeadPosition
+	sw	$t4, 0($t1)
+	addi	$t1, $t1, 256		# set t1 to pixel down. THIS IS HOW WE MOVE!!!
+	sw	$t2, 0($t1)		# draw 1 pixel 
+
 	
 	j	exitMoving
 	
 moveLeft:
-	lw	$s3, snakeLeft	# s3 = direction of snake
-	add	$a0, $s3, $zero	# a0 = direction of snake
-	jal	updateSnake
 	
-	# move the snake
-	jal 	updateSnakeHeadPosition
+	sw	$t4, 0($t1)
+	addi	$t1, $t1, -4		# set t1 to pixel to the left. THIS IS HOW WE MOVE!!!
+	lw	$t7, 0($t1)		# load pixel color at new head address
+        beq	$t7, $t6, collisionDetected	# if pixel is black, branch to collisionDetected
+	sw	$t2, 0($t1)		# draw 1 pixel 
 	
+
 	j	exitMoving
 	
 moveRight:
-	lw	$s3, snakeRight	# s3 = direction of snake
-	add	$a0, $s3, $zero	# a0 = direction of snake
-	jal	updateSnake
 	
-	# move the snake
-	jal 	updateSnakeHeadPosition
+	sw	$t4, 0($t1)
+	addi	$t1, $t1, 4		# set t1 to pixel to the right. THIS IS HOW WE MOVE!!!
+	sw	$t2, 0($t1)		# draw 1 pixel 
 
 	j	exitMoving
 
 exitMoving:
 	j 	gameUpdateLoop		# loop back to beginning
+
+
+
+
+checkCollision:
+	#add future position to register a1
+	#check color of that pixel BEQ color,$a1
+    lw	$t0, 0($a1)		# t0 = pixel value at new head address
+    li	$t1, 0x00000000		# t1 = black color
+    beq	$t0, $t1, collisionDetected	# if pixel is black, branch to collisionDetected
+    j	exitMoving		# no collision, jump to exitMoving
+
+collisionDetected:
+	la 	$t0, frameBuffer	# load frame buffer addres
+	li 	$t1, 8192		# save 512*256 pixels
+	li 	$t2, 0xff0000		# load light gray color
+deathScreen:
+	sw   	$t2, 0($t0)
+	addi 	$t0, $t0, 4 	# advance to next pixel position in display
+	sw   	$t5, 0($t0)
+	addi 	$t0, $t0, 4	# advance to next pixel position in display
+	sw   	$t2, 0($t0)
+	addi 	$t0, $t0, 4	# advance to next pixel position in display
+	
+	
+	addi 	$t1, $t1, -1	# decrement number of pixels
+	bnez 	$t1, deathScreen	# repeat while number of pixels is not zero
+    li	$v0, 10			# syscall code for exit
+    syscall
+	
+
+
+
+
+
 
 
 
@@ -369,14 +475,14 @@ exitMoving:
 
 updateSnake:
 
-	addiu 	$sp, $sp, -24	# Allocates 24 bytes of stack space for the function’s stack frame
+	addiu 	$sp, $sp, -24	# Allocates 24 bytes of stack space for the functionâ€™s stack frame
 
 	#The 24 bytes are used to store:
-	#The caller’s frame pointer ($fp, 4 bytes).
+	#The callerâ€™s frame pointer ($fp, 4 bytes).
 	#The return address ($ra, 4 bytes).
 
 
-	sw 	$fp, 0($sp)	# Preserves the caller’s frame pointer so it can be restored when updateSnake returns.
+	sw 	$fp, 0($sp)	# Preserves the callerâ€™s frame pointer so it can be restored when updateSnake returns.
 	sw 	$ra, 4($sp)	# Preserves the return address so updateSnake can return to the caller (gameUpdateLoop).
 
 	addiu 	$fp, $sp, 20	# setup updateSnake frame pointer- TBD
@@ -519,7 +625,7 @@ exitUpdateSnake:
 updateSnakeHeadPosition:
 	addiu 	$sp, $sp, -24	# allocate 24 bytes for stack
 	sw 	$fp, 0($sp)	# store caller's frame pointer
-	sw 	$ra, 4($sp)	# store caller's return address
+	sw 	$ra, 4($sp)	# store caller's return addressre
 	addiu 	$fp, $sp, 20	# setup updateSnake frame pointer	
 	
 	lw	$t3, xVel	# load xVel from memory

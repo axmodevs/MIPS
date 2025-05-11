@@ -1,11 +1,14 @@
 
-
-###	Unit Width in pixels: 8 			  
-###	Unit Heigh in Pixels: 8				  
-###	Display Width in Pixels: 512			  
-###	Display Height in Pixels: 256  			
-###	Base address for display 0x10010000 
-
+###############################################################
+### 			BITMAP SETTINGS			    ###	
+###							    ###
+###	Unit Width in pixels: 8 			    ###
+###	Unit Heigh in Pixels: 8				    ###
+###	Display Width in Pixels: 512			    ###
+###	Display Height in Pixels: 256  			    ###
+###	Base address for display 0x10010000 (static data)   ###
+###							    ###	
+###############################################################
 
 .data
 
@@ -20,20 +23,15 @@ frameBuffer: 	.space 	0x80000		#512 wide x 256 high pixels, JUST THE SIZE OF THE
 #yVel: 0x10090004 (4 bytes).
 #xPos: 0x10090008 (4 bytes). ETC
 
-xVel:		.word	0		# x velocity start 0
-yVel:		.word	0		# y velocity start 0
+
 xPos:		.word	50		# x position
 yPos:		.word	27		# y position
-tail:		.word	7624		# location of rail on bit map display
+position:		.word	7624		# location of rail on bit map display
 enemieX:		.word	32		# enemie x position
 enemieY:		.word	16		# enemie y position
 
 
 
-snakeUp:	.word	0x0000ff00	# green pixel for when snaking moving up
-snakeDown:	.word	0x0100ff00	# green pixel for when snaking moving down
-snakeLeft:	.word	0x0200ff00	# green pixel for when snaking moving left
-snakeRight:	.word	0x0300ff00	# green pixel for when snaking moving right
 #THESE ARE USED TO ENCODE BOTH DIRECTION AND COLOR
 #0x0000(up) ff00(color green)
 #0x0100(down) ff00(color green)
@@ -203,8 +201,8 @@ enemies:
 #t6 RED COLOR
 
 	la	$t0, frameBuffer	# load frame buffer address
-	lw	$s2, tail
-	add	$t1, $s2, $t0		# t1 = tail start on bit map display
+	lw	$s2, position
+	add	$t1, $s2, $t0		# t1 = position start on bit map display
 	li 	$t2, 0x00ffcc00		# load YELLOW COLOR
 	li 	$t4, 0x00d3d3d3		# load GREY
 	li 	$t5, 0x00000000		# load BLACK 

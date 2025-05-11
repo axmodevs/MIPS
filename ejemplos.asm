@@ -1,5 +1,3 @@
-# Author: Daniel Shevelev
-# Purpose: Create and run a classic game of snake in assembly
 
 ###############################################################
 ### 			BITMAP SETTINGS			    ###	
@@ -14,7 +12,17 @@
 
 .data
 
-frameBuffer: 	.space 	0x80000		#512 wide x 256 high pixels
+frameBuffer: 	.space 	0x80000		#512 wide x 256 high pixels, JUST THE SIZE OF THE MEMORY FOR THE SCREEN, NOT THE ADRESS WICH IS 0x1001000. ###	Base address for display 0x10010000 (static data)   ###
+
+#AFTER THIS WE HAVE:
+
+#Each .word directive allocates 4 bytes in the .data section.
+##The assembler places these variables sequentially after the frameBuffer.
+#Since frameBuffer occupies 0x80000 bytes (0x10010000 to 0x1008FFFF), the first .word variable (xVel) starts at 0x10090000, and subsequent variables follow:
+#xVel: 0x10090000 (4 bytes).
+#yVel: 0x10090004 (4 bytes).
+#xPos: 0x10090008 (4 bytes). ETC
+
 xVel:		.word	0		# x velocity start 0
 yVel:		.word	0		# y velocity start 0
 xPos:		.word	50		# x position
@@ -22,10 +30,20 @@ yPos:		.word	27		# y position
 tail:		.word	7624		# location of rail on bit map display
 appleX:		.word	32		# apple x position
 appleY:		.word	16		# apple y position
+
+
+
 snakeUp:	.word	0x0000ff00	# green pixel for when snaking moving up
 snakeDown:	.word	0x0100ff00	# green pixel for when snaking moving down
 snakeLeft:	.word	0x0200ff00	# green pixel for when snaking moving left
 snakeRight:	.word	0x0300ff00	# green pixel for when snaking moving right
+#THESE ARE USED TO ENCODE BOTH DIRECTION AND COLOR
+#0x0000(up) ff00(color green)
+#0x0100(down) ff00(color green)
+#0x0300(right) ff00(color green)
+#0x0200(left) ff00(color green)
+
+
 xConversion:	.word	64		# x value for converting xPos to bitmap display
 yConversion:	.word	4		# y value for converting (x, y) to bitmap display
 
@@ -34,6 +52,16 @@ yConversion:	.word	4		# y value for converting (x, y) to bitmap display
 main:
 
 ### DRAW BACKGROUND SECTION
+#Clarifying the Questions
+#“The screen memory is at 0x10010000 from the start”:
+#Yes, in the MARS simulator, the bitmap display’s memory is mapped to start at 0x10010000. This is where pixel data is written to update the screen.
+#The frameBuffer is allocated at this address to serve as the memory buffer for the display.
+#“The next space we reserve is for the pixels?”:
+#The frameBuffer: .space 0x80000 reserves 524,288 bytes (0x80000) starting at 0x10010000 specifically for pixel data (512 * 256 pixels * 4 bytes per pixel).
+#This is the first allocation in the .data section, and it directly corresponds to the screen’s pixel buffer.
+#“What about the rest of .word we have in the .data”:
+#The other .word directives (xVel, yVel, etc.) are additional variables stored in the .data section after the frameBuffer. They are not part of the pixel data but are used to store game state (e.g., snake position, velocity, colors).
+#These variables are allocated in memory immediately following the frameBuffer’s 0x80000 bytes.
 
 	la 	$t0, frameBuffer	# load frame buffer addres
 	li 	$t1, 8192		# save 512*256 pixels
@@ -43,13 +71,46 @@ l1:
 	addi 	$t0, $t0, 4 	# advance to next pixel position in display
 	addi 	$t1, $t1, -1	# decrement number of pixels
 	bnez 	$t1, l1		# repeat while number of pixels is not zero
+
+
+#Step-by-Step Analysis of l1
+#$t0: Points to the current pixel's address in frameBuffer.
+#$t1: Tracks the remaining number of pixels to process (starts at 8192).
+#$t2: Holds the light gray color value (0x00d3d3d3).
+
+#Initialization (before the loop):
+#$t0 is loaded with the starting address of frameBuffer (the memory region for the bitmap display).
+#$t1 is set to 8192, which represents the total number of pixels in the 512x256 display (512 * 256 / 4 = 8192, accounting for 4 bytes per pixel).
+#$t2 is loaded with the light gray color value (0x00d3d3d3).
+
+#Loop Body (l1):
+#sw $t2, 0($t0): Stores the light gray color (0x00d3d3d3) at the memory address in $t0, coloring the current pixel.
+#addi $t0, $t0, 4: Increments $t0 by 4 to point to the next pixel's memory address (since each pixel is 4 bytes).
+#addi $t1, $t1, -1: Decrements the pixel counter ($t1) by 1.
+#bnez $t1, l1: Branches back to l1 if $t1 is not zero, continuing the loop until all 8192 pixels are processed.
 	
-### DRAW BORDER SECTION
+
+
+### DRAW BORDER SECTION#################################################################################
+
+#The game operates in a unit-based coordinate system, where each unit is an 8x8 pixel square. This means:
+
+#Width in units: 512 pixels / 8 pixels per unit = 64 units wide.
+#Height in units: 256 pixels / 8 pixels per unit = 32 units high.
+#Thus, the game grid is 64 units wide and 32 units high, and each unit corresponds to an 8x8 pixel block on the display.
+
+
+#The first 4 bytes (address frameBuffer + 0) store the color of the pixel at (x=0, y=0) (top-left corner).
+#The next 4 bytes (address frameBuffer + 4) store the pixel at (x=1, y=0).
+#After 512 pixels OR 64 UNITS (2048 bytes = 512 * 4), the first row (y=0) is complete, and the next 4 bytes (address frameBuffer + 2048) store the pixel at (x=0, y=1).
+#This continues until the last pixel at (x=511, y=255), stored at address frameBuffer + 0x7FFFC (524,284 bytes).
 	
 	# top wall section
 	la	$t0, frameBuffer	# load frame buffer addres
 	addi	$t1, $zero, 64		# t1 = 64 length of row
 	li 	$t2, 0x00000000		# load black color
+
+
 drawBorderTop:
 	sw	$t2, 0($t0)		# color Pixel black
 	addi	$t0, $t0, 4		# go to next pixel
@@ -87,20 +148,9 @@ drawBorderRight:
 	addi	$t0, $t0, 256		# go to next pixel
 	addi	$t1, $t1, -1		# decrease pixel count
 	bnez	$t1, drawBorderRight	# repeat unitl pixel count == 0
-	
-	### draw initial snake section
-	la	$t0, frameBuffer	# load frame buffer address
-	lw	$s2, tail		# s2 = tail of snake
-	lw	$s3, snakeLeft		# s3 = direction of snake
-	
-	add	$t1, $s2, $t0		# t1 = tail start on bit map display
-	sw	$s3, 0($t1)		# draw pixel where snake is
-	addi	$t1, $t1, -256		# set t1 to pixel above
-	sw	$s3, 0($t1)		# draw pixel where snake currently is
-	#addi	$t1, $t1, -256		# set t1 to pixel above
-	#sw	$s3, 0($t1)		# draw pixel where snake currently is
 
-
+#Horizontal by 4
+#
 
 
 	la 	$t0, frameBuffer	# load frame buffer addres
@@ -156,10 +206,61 @@ drawBorderRight:
 	#8192-128-1536
 	addi	$t0, $t0, 4096		# 
 	sw	$t2, 0($t0)		# color YELLOW
+	
+	
+la	$t0, frameBuffer	# t0 = 0x10010000
+addiu	$t1, $zero, 2368	# offset = (8 * 64 + 16) * 4
+addu	$t0, $t0, $t1		# t0 = 0x10010840
+sw	$t2, 0($t0)		# draw green unit at (16, 8)
 
 
+	
+	
+
+	
+
+
+
+
+
+ ##############################################################################  
+
+
+	### draw initial snake section
+	la	$t0, frameBuffer	# load frame buffer address
+	lw	$s2, tail		# s2 = tail of snake,Loads the value 7624 (the initial tail offset) into $s2. This offset represents the memory location of the snake’s tail relative to frameBuffer.
+	lw	$s3, snakeUp		# s3 = direction of snake
+	
+	add	$t1, $s2, $t0		# t1 = tail start on bit map display
+	sw	$s3, 0($t1)		# draw pixel where snake is
+	addi	$t1, $t1, -256		# set t1 to pixel above. THIS IS HOW WE MOVE!!!
+	sw	$s3, 0($t1)		# draw pixel where snake currently is
+
+#This creates a two-segment snake: tail at (50, 29) and another segment at (50, 28), moving toward the head at (50, 27).
+#Why -256?
+#The value 256 corresponds to moving one unit up in the unit-based coordinate system:
+#The offset formula is (y_unit * 64 + x_unit) * 4.
+#Decreasing y_unit by 1: (y_unit - 1) * 64 + x_unit reduces the offset by 64 * 4 = 256 bytes.
+#Since the snake is moving up, the second segment is one unit higher (y=28 vs. y=29), and the address decreases by 256 bytes.
+
+
+	#addi	$t1, $t1, -256		# set t1 to pixel above
+	#sw	$s3, 0($t1)		# draw pixel where snake currently is
+	
 	### draw initial apple
 	jal 	drawApple
+
+
+
+
+
+
+
+
+
+
+
+
 
 # This is the update function for game
 # psudeocode
@@ -168,6 +269,7 @@ drawBorderRight:
 # if input == s { moveDown();}	
 # if input == a { moveLeft();}	
 # if input == d { moveRigth();}	
+
 ### each move method has similar code
 # moveDirection () {
 #	dir = direction of snake
@@ -175,16 +277,18 @@ drawBorderRight:
 #	updateSnakeHeadPosition()
 #	go back to beginning of update fucntion
 # } 	
+
 # Registers:
 # t3 = key press input
 # s3 = direction of the snake
+
 gameUpdateLoop:
 
-	lw	$t3, 0xFFFF0000
-	beqz	$t3, gameUpdateLoop
-	lw	$t3, 0xffff0004	
+	lw	$t3, 0xFFFF0000 #keyboard control register in MARS, Bit 0 is set to 1 when a key is pressed (indicating input is available).
+	beqz	$t3, gameUpdateLoop#If $t3 is zero (no key pressed), branches back to gameUpdateLoop, effectively looping until input is detected.
+	lw	$t3, 0xffff0004	#a key is pressed, loads the ASCII value of the key from the keyboard data register (0xFFFF0004) into $t3
 	
-	### Sleep for 66 ms so frame rate is about 15
+	### Sleep for 66 ms so frame rate is about 15, "stops" the game so we can actually play and have time to press keys
 	addi	$v0, $zero, 32	# syscall sleep
 	addi	$a0, $zero, 66	# 66 ms
 	syscall
@@ -196,8 +300,8 @@ gameUpdateLoop:
 
 	
 moveUp:
-	lw	$s3, snakeUp	# s3 = direction of snake
-	add	$a0, $s3, $zero	# a0 = direction of snake
+	lw	$s3, snakeUp	# s3 = direction of snake, loads the value of snakeUp (0x0000ff00, green color(ff) with “up” flag(0000) into $s3.
+	add	$a0, $s3, $zero	# a0 = direction of snake, copies the value in $s3 (0x0000ff00) to $a0, $a0 is the argument register used to pass the direction/color to the updateSnake function
 	jal	updateSnake
 	
 	# move the snake
@@ -238,6 +342,9 @@ moveRight:
 exitMoving:
 	j 	gameUpdateLoop		# loop back to beginning
 
+
+
+
 # this function update the snake on the bitmap display and changes its velocity
 # Param 1 is the direction
 # code logic steps
@@ -256,11 +363,23 @@ exitMoving:
 #	update new tail base upon tail direction
 #	exit updateSnake function
 # }	
+
+
+
+
 updateSnake:
-	addiu 	$sp, $sp, -24	# allocate 24 bytes for stack
-	sw 	$fp, 0($sp)	# store caller's frame pointer
-	sw 	$ra, 4($sp)	# store caller's return address
-	addiu 	$fp, $sp, 20	# setup updateSnake frame pointer
+
+	addiu 	$sp, $sp, -24	# Allocates 24 bytes of stack space for the function’s stack frame
+
+	#The 24 bytes are used to store:
+	#The caller’s frame pointer ($fp, 4 bytes).
+	#The return address ($ra, 4 bytes).
+
+
+	sw 	$fp, 0($sp)	# Preserves the caller’s frame pointer so it can be restored when updateSnake returns.
+	sw 	$ra, 4($sp)	# Preserves the return address so updateSnake can return to the caller (gameUpdateLoop).
+
+	addiu 	$fp, $sp, 20	# setup updateSnake frame pointer- TBD
 	
 	### DRAW HEAD
 	lw	$t0, xPos		# t0 = xPos of snake
@@ -503,3 +622,4 @@ goodApple:
 	lw 	$fp, 0($sp)	# restores caller's frame pointer
 	addiu 	$sp, $sp, 24	# restores caller's stack pointer
 	jr 	$ra		# return to caller's code
+

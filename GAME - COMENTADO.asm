@@ -1,9 +1,9 @@
 
-###	Unit Width in pixels: 8 			    ###
-###	Unit Heigh in Pixels: 8				    ###
-###	Display Width in Pixels: 512			    ###
-###	Display Height in Pixels: 256  			    ###
-###	Base address for display 0x10010000 (static data)   ###
+###	Unit Width in pixels: 8 			    
+###	Unit Heigh in Pixels: 8				    
+###	Display Width in Pixels: 512			    
+###	Display Height in Pixels: 256  			    
+###	Base address for display 0x10010000 (static data) 
 
 
 .data
@@ -26,13 +26,6 @@ position:		.word	7624		# location of rail on bit map display
 enemieX:		.word	32		# enemie x position
 enemieY:		.word	16		# enemie y position
 
-
-
-#THESE ARE USED TO ENCODE BOTH DIRECTION AND COLOR
-#0x0000(up) ff00(color green)
-#0x0100(down) ff00(color green)
-#0x0300(right) ff00(color green)
-#0x0200(left) ff00(color green)
 
 
 xConversion:	.word	64		# x value for converting xPos to bitmap display

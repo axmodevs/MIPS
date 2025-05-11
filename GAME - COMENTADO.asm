@@ -1,14 +1,11 @@
 
-###############################################################
-### 			BITMAP SETTINGS			    ###	
-###							    ###
-###	Unit Width in pixels: 8 			    ###
-###	Unit Heigh in Pixels: 8				    ###
-###	Display Width in Pixels: 512			    ###
-###	Display Height in Pixels: 256  			    ###
-###	Base address for display 0x10010000 (static data)   ###
-###							    ###	
-###############################################################
+
+###	Unit Width in pixels: 8 			  
+###	Unit Heigh in Pixels: 8				  
+###	Display Width in Pixels: 512			  
+###	Display Height in Pixels: 256  			
+###	Base address for display 0x10010000 
+
 
 .data
 
@@ -28,8 +25,8 @@ yVel:		.word	0		# y velocity start 0
 xPos:		.word	50		# x position
 yPos:		.word	27		# y position
 tail:		.word	7624		# location of rail on bit map display
-appleX:		.word	32		# apple x position
-appleY:		.word	16		# apple y position
+enemieX:		.word	32		# enemie x position
+enemieY:		.word	16		# enemie y position
 
 
 
@@ -162,13 +159,13 @@ drawBorderRight:
 ### DRAW ENEIMIES
 
 
-	jal 	drawApple
+	jal 	drawenemie
 	addi	$t9, $zero, 300		# t1 = 64 length of row
-apples:
-	jal 	newAppleLocation
-	jal	drawApple
+enemies:
+	jal 	newenemieLocation
+	jal	drawenemie
 	addi	$t9, $t9, -1		# decrease counter
-	bnez	$t9, apples	# repeat unitl pixel count == 0
+	bnez	$t9, enemies	# repeat unitl pixel count == 0
 
 
 
@@ -318,31 +315,31 @@ deathScreen:
 
 
 
-# this function draws the apple base upon x and y coordintes
+# this function draws the enemie base upon x and y coordintes
 # code logic
-# drawApple() {
+# drawenemie() {
 #	convert (x, y) to bitmap display
 #	store red color into bitmap display
-#	exit drawApple
+#	exit drawenemie
 # }
-drawApple:
+drawenemie:
 	addiu 	$sp, $sp, -24	# allocate 24 bytes for stack
 	sw 	$fp, 0($sp)	# store caller's frame pointer
 	sw 	$ra, 4($sp)	# store caller's return address
 	addiu 	$fp, $sp, 20	# setup updateSnake frame pointer
 	
-	lw	$t0, appleX		# t0 = xPos of apple
-	lw	$t1, appleY		# t1 = yPos of apple
+	lw	$t0, enemieX		# t0 = xPos of enemie
+	lw	$t1, enemieY		# t1 = yPos of enemie
 	lw	$t2, xConversion	# t2 = 64
-	mult	$t1, $t2		# appleY * 64
-	mflo	$t3			# t3 = appleY * 64
-	add	$t3, $t3, $t0		# t3 = appleY * 64 + appleX
+	mult	$t1, $t2		# enemieY * 64
+	mflo	$t3			# t3 = enemieY * 64
+	add	$t3, $t3, $t0		# t3 = enemieY * 64 + enemieX
 	lw	$t2, yConversion	# t2 = 4
-	mult	$t3, $t2		# (yPos * 64 + appleX) * 4
-	mflo	$t0			# t0 = (appleY * 64 + appleX) * 4
+	mult	$t3, $t2		# (yPos * 64 + enemieX) * 4
+	mflo	$t0			# t0 = (enemieY * 64 + enemieX) * 4
 	
 	la 	$t1, frameBuffer	# load frame buffer address
-	add	$t0, $t1, $t0		# t0 = (appleY * 64 + appleX) * 4 + frame address
+	add	$t0, $t1, $t0		# t0 = (enemieY * 64 + enemieX) * 4 + frame address
 	li	$t4, 0x00ff0000
 	sw	$t4, 0($t0)		# store direction plus color on the bitmap display
 	
@@ -351,19 +348,19 @@ drawApple:
 	addiu 	$sp, $sp, 24	# restores caller's stack pointer
 	jr 	$ra		# return to caller's code	
 
-# This function finds a new spot for an apple after its been eaten
+# This function finds a new spot for an enemie after its been eaten
 # does so randomly using syscall 42 which is a random number generator
 # code logic:
-# newAppleLocation() {
+# newenemieLocation() {
 #	get random X from 0 - 63
 # 	get random Y from 0 - 31
 #	convert (x, y) to bit map display value
 # 	if (bit map display value != gray background)
 #		redo the randomize
-#	once good apple spot found store x, y in memory
-#	exit newAppleLocation
+#	once good enemie spot found store x, y in memory
+#	exit newenemieLocation
 # }
-newAppleLocation:
+newenemieLocation:
 	addiu 	$sp, $sp, -24	# allocate 24 bytes for stack
 	sw 	$fp, 0($sp)	# store caller's frame pointer
 	sw 	$ra, 4($sp)	# store caller's return address
@@ -373,32 +370,32 @@ redoRandom:
 	addi	$v0, $zero, 42	# random int 
 	addi	$a1, $zero, 63	# upper bound
 	syscall
-	add	$t1, $zero, $a0	# random appleX
+	add	$t1, $zero, $a0	# random enemieX
 	
 	addi	$v0, $zero, 42	# random int 
 	addi	$a1, $zero, 31	# upper bound
 	syscall
-	add	$t2, $zero, $a0	# random appleY
+	add	$t2, $zero, $a0	# random enemieY
 	
 	lw	$t3, xConversion	# t3 = 64
-	mult	$t2, $t3		# random appleY * 64
-	mflo	$t4			# t4 = random appleY * 64
-	add	$t4, $t4, $t1		# t4 = random appleY * 64 + random appleX
+	mult	$t2, $t3		# random enemieY * 64
+	mflo	$t4			# t4 = random enemieY * 64
+	add	$t4, $t4, $t1		# t4 = random enemieY * 64 + random enemieX
 	lw	$t3, yConversion	# t3 = 4
-	mult	$t3, $t4		# (random appleY * 64 + random appleX) * 4
-	mflo	$t4			# t1 = (random appleY * 64 + random appleX) * 4
+	mult	$t3, $t4		# (random enemieY * 64 + random enemieX) * 4
+	mflo	$t4			# t1 = (random enemieY * 64 + random enemieX) * 4
 	
 	la 	$t0, frameBuffer	# load frame buffer address
-	add	$t0, $t4, $t0		# t0 = (appleY * 64 + appleX) * 4 + frame address
+	add	$t0, $t4, $t0		# t0 = (enemieY * 64 + enemieX) * 4 + frame address
 	lw	$t5, 0($t0)		# t5 = value of pixel at t0
 	
 	li	$t6, 0x00d3d3d3		# load light gray color
-	beq	$t5, $t6, goodApple	# if loction is a good sqaure branch to goodApple
+	beq	$t5, $t6, goodenemie	# if loction is a good sqaure branch to goodenemie
 	j redoRandom
 
-goodApple:
-	sw	$t1, appleX
-	sw	$t2, appleY	
+goodenemie:
+	sw	$t1, enemieX
+	sw	$t2, enemieY	
 
 	lw 	$ra, 4($sp)	# load caller's return address
 	lw 	$fp, 0($sp)	# restores caller's frame pointer

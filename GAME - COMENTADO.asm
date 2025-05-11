@@ -44,7 +44,7 @@ main:
 #The frameBuffer: .space 0x80000 reserves 524,288 bytes (0x80000) starting at 0x10010000 specifically for pixel data (512 * 256 pixels * 4 bytes per pixel).
 #This is the first allocation in the .data section, and it directly corresponds to the screenâ€™s pixel buffer.
 #â€œWhat about the rest of .word we have in the .dataâ€?:
-#The other .word directives (xVel, yVel, etc.) are additional variables stored in the .data section after the frameBuffer. They are not part of the pixel data but are used to store game state (e.g., snake position, velocity, colors).
+#The other .word directives (xVel, yVel, etc.) are additional variables stored in the .data section after the frameBuffer. They are not part of the pixel data but are used to store game state (e.g., player position, velocity, colors).
 #These variables are allocated in memory immediately following the frameBufferâ€™s 0x80000 bytes.
 
 	la 	$t0, frameBuffer	# load frame buffer addres
@@ -187,15 +187,15 @@ enemies:
 
 ### each move method has similar code
 # moveDirection () {
-#	dir = direction of snake
-#	updateSnake(dir)
-#	updateSnakeHeadPosition()
+#	dir = direction of player
+#	updateplayer(dir)
+#	updateplayerHeadPosition()
 #	go back to beginning of update fucntion
 # } 	
 
 # Registers:
 # t3 = key press input
-# s3 = direction of the snake
+# s3 = direction of the player
 #t1 position
 #t2 YELLOW COLOR
 #t4 GREY COLOR
@@ -351,7 +351,7 @@ drawenemie:
 	addiu 	$sp, $sp, -24	# allocate 24 bytes for stack
 	sw 	$fp, 0($sp)	# store caller's frame pointer
 	sw 	$ra, 4($sp)	# store caller's return address
-	addiu 	$fp, $sp, 20	# setup updateSnake frame pointer
+	addiu 	$fp, $sp, 20	# setup updateplayer frame pointer
 	
 	lw	$t0, enemieX		# t0 = xPos of enemie
 	lw	$t1, enemieY		# t1 = yPos of enemie
@@ -377,7 +377,7 @@ drawPoint:
 	addiu 	$sp, $sp, -24	# allocate 24 bytes for stack
 	sw 	$fp, 0($sp)	# store caller's frame pointer
 	sw 	$ra, 4($sp)	# store caller's return address
-	addiu 	$fp, $sp, 20	# setup updateSnake frame pointer
+	addiu 	$fp, $sp, 20	# setup updateplayer frame pointer
 	
 	lw	$t0, enemieX		# t0 = xPos of enemie
 	lw	$t1, enemieY		# t1 = yPos of enemie
@@ -415,7 +415,7 @@ newLocation:
 	addiu 	$sp, $sp, -24	# allocate 24 bytes for stack
 	sw 	$fp, 0($sp)	# store caller's frame pointer
 	sw 	$ra, 4($sp)	# store caller's return address
-	addiu 	$fp, $sp, 20	# setup updateSnake frame pointer
+	addiu 	$fp, $sp, 20	# setup updateplayer frame pointer
 
 redoRandom:		
 	addi	$v0, $zero, 42	# random int 

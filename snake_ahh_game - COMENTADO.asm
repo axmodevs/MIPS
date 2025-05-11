@@ -149,8 +149,7 @@ drawBorderRight:
 	addi	$t1, $t1, -1		# decrease pixel count
 	bnez	$t1, drawBorderRight	# repeat unitl pixel count == 0
 
-#Horizontal by 4
-#
+
 
 	
 
@@ -158,158 +157,18 @@ drawBorderRight:
 
 
 
- ##############################################################################  
-
-
-	### draw initial snake section
-	#la	$t0, frameBuffer	# load frame buffer address
-	#lw	$s2, tail		# s2 = tail of snake,Loads the value 7624 (the initial tail offset) into $s2. This offset represents the memory location of the snakeâ€™s tail relative to frameBuffer.
-	#lw	$s3, snakeUp		# s3 = direction of snake
 	
-	#add	$t1, $s2, $t0		# t1 = tail start on bit map display
-	#sw	$s3, 0($t1)		# draw pixel where snake is
-	#addi	$t1, $t1, -256		# set t1 to pixel above. THIS IS HOW WE MOVE!!!
-	#sw	$s3, 0($t1)		# draw pixel where snake currently is
-
-#This creates a two-segment snake: tail at (50, 29) and another segment at (50, 28), moving toward the head at (50, 27).
-#Why -256?
-#The value 256 corresponds to moving one unit up in the unit-based coordinate system:
-#The offset formula is (y_unit * 64 + x_unit) * 4.
-#Decreasing y_unit by 1: (y_unit - 1) * 64 + x_unit reduces the offset by 64 * 4 = 256 bytes.
-#Since the snake is moving up, the second segment is one unit higher (y=28 vs. y=29), and the address decreases by 256 bytes.
-
-
-	#addi	$t1, $t1, -256		# set t1 to pixel above
-	#sw	$s3, 0($t1)		# draw pixel where snake currently is
 	
-	### draw initial apple
+### DRAW ENEIMIES
+
+
 	jal 	drawApple
-	
+	addi	$t9, $zero, 300		# t1 = 64 length of row
+apples:
 	jal 	newAppleLocation
 	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-
-
-
-
+	addi	$t9, $t9, -1		# decrease counter
+	bnez	$t9, apples	# repeat unitl pixel count == 0
 
 
 
@@ -353,6 +212,8 @@ drawBorderRight:
 	li 	$t4, 0x00d3d3d3		# load GREY
 	li 	$t5, 0x00000000		# load BLACK 
 	li	$t6, 0x00ff0000		# load red
+	
+	sw	$t2, 0($t1)		# draw 1 pixel
 
 gameUpdateLoop:
 
@@ -379,6 +240,9 @@ moveUp:
 
 	sw	$t4, 0($t1)		#we color the pixel we were located to background color
 	addi	$t1, $t1, -256		# set t1 to pixel above. THIS IS HOW WE MOVE!!!
+	lw	$t7, 0($t1)		# load pixel color at new head address
+        beq	$t7, $t6, collisionDetected	# if pixel is red, branch to collisionDetected
+
 	sw	$t2, 0($t1)		# draw 1 pixel 
 	
 	j	exitMoving 	
@@ -386,6 +250,9 @@ moveUp:
 moveDown:
 	sw	$t4, 0($t1)
 	addi	$t1, $t1, 256		# set t1 to pixel down. THIS IS HOW WE MOVE!!!
+	lw	$t7, 0($t1)		# load pixel color at new head address
+        beq	$t7, $t6, collisionDetected	# if pixel is red, branch to collisionDetected
+
 	sw	$t2, 0($t1)		# draw 1 pixel 
 
 	
@@ -396,7 +263,8 @@ moveLeft:
 	sw	$t4, 0($t1)
 	addi	$t1, $t1, -4		# set t1 to pixel to the left. THIS IS HOW WE MOVE!!!
 	lw	$t7, 0($t1)		# load pixel color at new head address
-        beq	$t7, $t6, collisionDetected	# if pixel is black, branch to collisionDetected
+        beq	$t7, $t6, collisionDetected	# if pixel is red, branch to collisionDetected
+
 	sw	$t2, 0($t1)		# draw 1 pixel 
 	
 
@@ -406,6 +274,9 @@ moveRight:
 	
 	sw	$t4, 0($t1)
 	addi	$t1, $t1, 4		# set t1 to pixel to the right. THIS IS HOW WE MOVE!!!
+	lw	$t7, 0($t1)		# load pixel color at new head address
+        beq	$t7, $t6, collisionDetected	# if pixel is red, branch to collisionDetected
+
 	sw	$t2, 0($t1)		# draw 1 pixel 
 
 	j	exitMoving
@@ -446,201 +317,6 @@ deathScreen:
 
 
 
-
-
-
-
-
-# this function update the snake on the bitmap display and changes its velocity
-# Param 1 is the direction
-# code logic steps
-# updateSnake(colorDir) {
-#	getBitMapLocation;
-#	store color dir in bitMapLoction
-#	getDirection of snake
-# 	update velocity based on snake
-#	check if head == apple
-#		get random new apple coordinates
-#		draw apple on bitmap display
-#		exit updateSnake function
-#	check head != background color
-#		game over
-#	Remove tail from bit map display
-#	update new tail base upon tail direction
-#	exit updateSnake function
-# }	
-
-
-
-
-updateSnake:
-
-	addiu 	$sp, $sp, -24	# Allocates 24 bytes of stack space for the functionâ€™s stack frame
-
-	#The 24 bytes are used to store:
-	#The callerâ€™s frame pointer ($fp, 4 bytes).
-	#The return address ($ra, 4 bytes).
-
-
-	sw 	$fp, 0($sp)	# Preserves the callerâ€™s frame pointer so it can be restored when updateSnake returns.
-	sw 	$ra, 4($sp)	# Preserves the return address so updateSnake can return to the caller (gameUpdateLoop).
-
-	addiu 	$fp, $sp, 20	# setup updateSnake frame pointer- TBD
-	
-	### DRAW HEAD
-	lw	$t0, xPos		# t0 = xPos of snake
-	lw	$t1, yPos		# t1 = yPos of snake
-	lw	$t2, xConversion	# t2 = 64
-	mult	$t1, $t2		# yPos * 64
-	mflo	$t3			# t3 = yPos * 64
-	add	$t3, $t3, $t0		# t3 = yPos * 64 + xPos
-	lw	$t2, yConversion	# t2 = 4
-	mult	$t3, $t2		# (yPos * 64 + xPos) * 4
-	mflo	$t0			# t0 = (yPos * 64 + xPos) * 4
-	
-	la 	$t1, frameBuffer	# load frame buffer address
-	add	$t0, $t1, $t0		# t0 = (yPos * 64 + xPos) * 4 + frame address
-	lw	$t4, 0($t0)		# save original val of pixel in t4
-	sw	$a0, 0($t0)		# store direction plus color on the bitmap display
-	
-	
-	### Set Velocity
-	lw	$t2, snakeUp			# load word snake up = 0x0000ff00
-	beq	$a0, $t2, setVelocityUp		# if head direction and color == snake up branch to setVelocityUp
-	
-	lw	$t2, snakeDown			# load word snake up = 0x0100ff00
-	beq	$a0, $t2, setVelocityDown	# if head direction and color == snake down branch to setVelocityUp
-	
-	lw	$t2, snakeLeft			# load word snake up = 0x0200ff00
-	beq	$a0, $t2, setVelocityLeft	# if head direction and color == snake left branch to setVelocityUp
-	
-	lw	$t2, snakeRight			# load word snake up = 0x0300ff00
-	beq	$a0, $t2, setVelocityRight	# if head direction and color == snake right branch to setVelocityUp
-	
-setVelocityUp:
-	addi	$t5, $zero, 0		# set x velocity to zero
-	addi	$t6, $zero, -1	 	# set y velocity to -1
-	sw	$t5, xVel		# update xVel in memory
-	sw	$t6, yVel		# update yVel in memory
-	j exitVelocitySet
-	
-setVelocityDown:
-	addi	$t5, $zero, 0		# set x velocity to zero
-	addi	$t6, $zero, 1 		# set y velocity to 1
-	sw	$t5, xVel		# update xVel in memory
-	sw	$t6, yVel		# update yVel in memory
-	j exitVelocitySet
-	
-setVelocityLeft:
-	addi	$t5, $zero, -1		# set x velocity to -1
-	addi	$t6, $zero, 0 		# set y velocity to zero
-	sw	$t5, xVel		# update xVel in memory
-	sw	$t6, yVel		# update yVel in memory
-	j exitVelocitySet
-	
-setVelocityRight:
-	addi	$t5, $zero, 1		# set x velocity to 1
-	addi	$t6, $zero, 0 		# set y velocity to zero
-	sw	$t5, xVel		# update xVel in memory
-	sw	$t6, yVel		# update yVel in memory
-	j exitVelocitySet
-	
-exitVelocitySet:
-	
-	### Head location checks
-	li 	$t2, 0x00ff0000		# load red color
-	bne	$t2, $t4, headNotApple	# if head location is not the apple branch away
-	
-	jal 	newAppleLocation
-	jal	drawApple
-	
-	jal 	newAppleLocation
-	jal	drawApple
-
-
-	jal 	newAppleLocation
-	jal	drawApple
-
-
-	j	exitUpdateSnake
-	
-headNotApple:
-
-	li	$t2, 0x00d3d3d3			# load light gray color
-	beq	$t2, $t4, validHeadSquare	# if head location is background branch away
-	
-	addi 	$v0, $zero, 10	# exit the program
-	syscall
-	
-validHeadSquare:
-
-	### Remove Tail
-	lw	$t0, tail		# t0 = tail
-	la 	$t1, frameBuffer	# load frame buffer address
-	add	$t2, $t0, $t1		# t2 = tail location on the bitmap display
-	li 	$t3, 0x00d3d3d3		# load light gray color
-	lw	$t4, 0($t2)		# t4 = tail direction and color
-	sw	$t3, 0($t2)		# replace tail with background color
-	
-	### update new Tail
-	lw	$t5, snakeUp			# load word snake up = 0x0000ff00
-	beq	$t5, $t4, setNextTailUp		# if tail direction and color == snake up branch to setNextTailUp
-	
-	lw	$t5, snakeDown			# load word snake up = 0x0100ff00
-	beq	$t5, $t4, setNextTailDown	# if tail direction and color == snake down branch to setNextTailDown
-	
-	lw	$t5, snakeLeft			# load word snake up = 0x0200ff00
-	beq	$t5, $t4, setNextTailLeft	# if tail direction and color == snake left branch to setNextTailLeft
-	
-	lw	$t5, snakeRight			# load word snake up = 0x0300ff00
-	beq	$t5, $t4, setNextTailRight	# if tail direction and color == snake right branch to setNextTailRight
-	
-setNextTailUp:
-	addi	$t0, $t0, -256		# tail = tail - 256
-	sw	$t0, tail		# store  tail in memory
-	j exitUpdateSnake
-	
-setNextTailDown:
-	addi	$t0, $t0, 256		# tail = tail + 256
-	sw	$t0, tail		# store  tail in memory
-	j exitUpdateSnake
-	
-setNextTailLeft:
-	addi	$t0, $t0, -4		# tail = tail - 4
-	sw	$t0, tail		# store  tail in memory
-	j exitUpdateSnake
-	
-setNextTailRight:
-	addi	$t0, $t0, 4		# tail = tail + 4
-	sw	$t0, tail		# store  tail in memory
-	j exitUpdateSnake
-	
-exitUpdateSnake:
-	
-	lw 	$ra, 4($sp)	# load caller's return address
-	lw 	$fp, 0($sp)	# restores caller's frame pointer
-	addiu 	$sp, $sp, 24	# restores caller's stack pointer
-	jr 	$ra		# return to caller's code
-	
-updateSnakeHeadPosition:
-	addiu 	$sp, $sp, -24	# allocate 24 bytes for stack
-	sw 	$fp, 0($sp)	# store caller's frame pointer
-	sw 	$ra, 4($sp)	# store caller's return addressre
-	addiu 	$fp, $sp, 20	# setup updateSnake frame pointer	
-	
-	lw	$t3, xVel	# load xVel from memory
-	lw	$t4, yVel	# load yVel from memory
-	lw	$t5, xPos	# load xPos from memory
-	lw	$t6, yPos	# load yPos from memory
-	add	$t5, $t5, $t3	# update x pos
-	add	$t6, $t6, $t4	# update y pos
-	sw	$t5, xPos	# store updated xpos back to memory
-	sw	$t6, yPos	# store updated ypos back to memory
-	
-	lw 	$ra, 4($sp)	# load caller's return address
-	lw 	$fp, 0($sp)	# restores caller's frame pointer
-	addiu 	$sp, $sp, 24	# restores caller's stack pointer
-	jr 	$ra		# return to caller's code
 
 # this function draws the apple base upon x and y coordintes
 # code logic

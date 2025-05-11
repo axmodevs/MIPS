@@ -1,14 +1,10 @@
 
-###############################################################
-### 			BITMAP SETTINGS			    ###	
-###							    ###
 ###	Unit Width in pixels: 8 			    ###
 ###	Unit Heigh in Pixels: 8				    ###
 ###	Display Width in Pixels: 512			    ###
 ###	Display Height in Pixels: 256  			    ###
 ###	Base address for display 0x10010000 (static data)   ###
-###							    ###	
-###############################################################
+
 
 .data
 
@@ -48,13 +44,13 @@ main:
 
 ### DRAW BACKGROUND SECTION
 #Clarifying the Questions
-#â€œThe screen memory is at 0x10010000 from the startâ€�:
+#â€œThe screen memory is at 0x10010000 from the startâ€?:
 #Yes, in the MARS simulator, the bitmap displayâ€™s memory is mapped to start at 0x10010000. This is where pixel data is written to update the screen.
 #The frameBuffer is allocated at this address to serve as the memory buffer for the display.
-#â€œThe next space we reserve is for the pixels?â€�:
+#â€œThe next space we reserve is for the pixels?â€?:
 #The frameBuffer: .space 0x80000 reserves 524,288 bytes (0x80000) starting at 0x10010000 specifically for pixel data (512 * 256 pixels * 4 bytes per pixel).
 #This is the first allocation in the .data section, and it directly corresponds to the screenâ€™s pixel buffer.
-#â€œWhat about the rest of .word we have in the .dataâ€�:
+#â€œWhat about the rest of .word we have in the .dataâ€?:
 #The other .word directives (xVel, yVel, etc.) are additional variables stored in the .data section after the frameBuffer. They are not part of the pixel data but are used to store game state (e.g., snake position, velocity, colors).
 #These variables are allocated in memory immediately following the frameBufferâ€™s 0x80000 bytes.
 
@@ -160,14 +156,27 @@ drawBorderRight:
 	jal 	drawenemie
 	addi	$t9, $zero, 300		# t1 = 64 length of row
 enemies:
-	jal 	newenemieLocation
+	jal 	newLocation
 	jal	drawenemie
 	addi	$t9, $t9, -1		# decrease counter
 	bnez	$t9, enemies	# repeat unitl pixel count == 0
 
 
 
-
+	jal 	newLocation
+	jal	drawPoint
+	
+	jal 	newLocation
+	jal	drawPoint
+	
+	jal 	newLocation
+	jal	drawPoint
+	
+	jal 	newLocation
+	jal	drawPoint
+	
+	jal 	newLocation
+	jal	drawPoint
 
 
 
@@ -201,16 +210,27 @@ enemies:
 #t6 RED COLOR
 
 	la	$t0, frameBuffer	# load frame buffer address
+	la 	$s7, frameBuffer	# load frame buffer addres for SCORE in Points
+
+	addi	$s6, $zero, 5	# 5 score points (blue pixel)
+	
+	
 	lw	$s2, position
 	add	$t1, $s2, $t0		# t1 = position start on bit map display
+	
+	
 	li 	$t2, 0x00ffcc00		# load YELLOW COLOR
 	li 	$t4, 0x00d3d3d3		# load GREY
 	li 	$t5, 0x00000000		# load BLACK 
 	li	$t6, 0x00ff0000		# load red
+	li	$t9, 0x000066ff		# load blue
 	
-	sw	$t2, 0($t1)		# draw 1 pixel
+	
+	sw	$t2, 0($t1)		# DRAW THE PLAYER FOR THE FIRST TIME (SPAWN)
 
 gameUpdateLoop:
+
+	beqz	$s6, winScreen
 
 	lw	$t3, 0xFFFF0000 #keyboard control register in MARS, Bit 0 is set to 1 when a key is pressed (indicating input is available).
 	beqz	$t3, gameUpdateLoop#If $t3 is zero (no key pressed), branches back to gameUpdateLoop, effectively looping until input is detected.
@@ -229,6 +249,8 @@ gameUpdateLoop:
 	beq	$t3, 97, moveLeft	# else if key press = 'a' branch to moveLeft
 	beq	$t3, 119, moveUp	# if key press = 'w' branch to moveUp
 	beq	$t3, 115, moveDown	# else if key press = 's' branch to moveDown
+	
+	
 
 	
 moveUp:
@@ -237,6 +259,7 @@ moveUp:
 	addi	$t1, $t1, -256		# set t1 to pixel above. THIS IS HOW WE MOVE!!!
 	lw	$t7, 0($t1)		# load pixel color at new head address
         beq	$t7, $t6, collisionDetected	# if pixel is red, branch to collisionDetected
+        beq	$t7, $t9, pointScored	# if pixel is blue, point scored
 
 	sw	$t2, 0($t1)		# draw 1 pixel 
 	
@@ -247,6 +270,7 @@ moveDown:
 	addi	$t1, $t1, 256		# set t1 to pixel down. THIS IS HOW WE MOVE!!!
 	lw	$t7, 0($t1)		# load pixel color at new head address
         beq	$t7, $t6, collisionDetected	# if pixel is red, branch to collisionDetected
+        beq	$t7, $t9, pointScored	# if pixel is blue, point scored
 
 	sw	$t2, 0($t1)		# draw 1 pixel 
 
@@ -259,6 +283,7 @@ moveLeft:
 	addi	$t1, $t1, -4		# set t1 to pixel to the left. THIS IS HOW WE MOVE!!!
 	lw	$t7, 0($t1)		# load pixel color at new head address
         beq	$t7, $t6, collisionDetected	# if pixel is red, branch to collisionDetected
+        beq	$t7, $t9, pointScored	# if pixel is blue, point scored
 
 	sw	$t2, 0($t1)		# draw 1 pixel 
 	
@@ -271,6 +296,7 @@ moveRight:
 	addi	$t1, $t1, 4		# set t1 to pixel to the right. THIS IS HOW WE MOVE!!!
 	lw	$t7, 0($t1)		# load pixel color at new head address
         beq	$t7, $t6, collisionDetected	# if pixel is red, branch to collisionDetected
+        beq	$t7, $t9, pointScored	# if pixel is blue, point scored
 
 	sw	$t2, 0($t1)		# draw 1 pixel 
 
@@ -282,20 +308,10 @@ exitMoving:
 
 
 
-checkCollision:
-	#add future position to register a1
-	#check color of that pixel BEQ color,$a1
-    lw	$t0, 0($a1)		# t0 = pixel value at new head address
-    li	$t1, 0x00000000		# t1 = black color
-    beq	$t0, $t1, collisionDetected	# if pixel is black, branch to collisionDetected
-    j	exitMoving		# no collision, jump to exitMoving
 
 collisionDetected:
-	la 	$t0, frameBuffer	# load frame buffer addres
-	li 	$t1, 8192		# save 512*256 pixels
-	li 	$t2, 0xff0000		# load light gray color
-deathScreen:
-	sw   	$t2, 0($t0)
+
+	sw   	$t6, 0($t0)
 	addi 	$t0, $t0, 4 	# advance to next pixel position in display
 	sw   	$t5, 0($t0)
 	addi 	$t0, $t0, 4	# advance to next pixel position in display
@@ -304,10 +320,28 @@ deathScreen:
 	
 	
 	addi 	$t1, $t1, -1	# decrement number of pixels
-	bnez 	$t1, deathScreen	# repeat while number of pixels is not zero
-    li	$v0, 10			# syscall code for exit
-    syscall
+	bnez 	$t1, collisionDetected	# repeat while number of pixels is not zero
+    	li	$v0, 10			# syscall code for exit
+    	syscall
+
+
+pointScored:
+	addi	$s6, $s6, -1
+	sw	$t2, 0($t1)		# draw 1 pixel (player corrsing over point=
+	addi 	$s7, $s7, 8
+	sw   	$t9, 0($s7) 	#draw score in top left screen 1 blue pixel per score point
+	j 	gameUpdateLoop
 	
+winScreen:
+	sw   	$t9, 0($t0)
+	addi 	$t0, $t0, 4 	# advance to next pixel position in display	
+	
+	addi 	$t1, $t1, -1	# decrement number of pixels
+	bnez 	$t1, winScreen	# repeat while number of pixels is not zero
+    	li	$v0, 10			# syscall code for exit
+    	syscall
+
+
 
 
 
@@ -344,21 +378,47 @@ drawenemie:
 	lw 	$ra, 4($sp)	# load caller's return address
 	lw 	$fp, 0($sp)	# restores caller's frame pointer
 	addiu 	$sp, $sp, 24	# restores caller's stack pointer
+	jr 	$ra		# return to caller's code
+	
+drawPoint:
+	addiu 	$sp, $sp, -24	# allocate 24 bytes for stack
+	sw 	$fp, 0($sp)	# store caller's frame pointer
+	sw 	$ra, 4($sp)	# store caller's return address
+	addiu 	$fp, $sp, 20	# setup updateSnake frame pointer
+	
+	lw	$t0, enemieX		# t0 = xPos of enemie
+	lw	$t1, enemieY		# t1 = yPos of enemie
+	lw	$t2, xConversion	# t2 = 64
+	mult	$t1, $t2		# enemieY * 64
+	mflo	$t3			# t3 = enemieY * 64
+	add	$t3, $t3, $t0		# t3 = enemieY * 64 + enemieX
+	lw	$t2, yConversion	# t2 = 4
+	mult	$t3, $t2		# (yPos * 64 + enemieX) * 4
+	mflo	$t0			# t0 = (enemieY * 64 + enemieX) * 4
+	
+	la 	$t1, frameBuffer	# load frame buffer address
+	add	$t0, $t1, $t0		# t0 = (enemieY * 64 + enemieX) * 4 + frame address
+	li	$t4, 0x000066ff
+	sw	$t4, 0($t0)		# store direction plus color on the bitmap display
+	
+	lw 	$ra, 4($sp)	# load caller's return address
+	lw 	$fp, 0($sp)	# restores caller's frame pointer
+	addiu 	$sp, $sp, 24	# restores caller's stack pointer
 	jr 	$ra		# return to caller's code	
 
 # This function finds a new spot for an enemie after its been eaten
 # does so randomly using syscall 42 which is a random number generator
 # code logic:
-# newenemieLocation() {
+# newLocation() {
 #	get random X from 0 - 63
 # 	get random Y from 0 - 31
 #	convert (x, y) to bit map display value
 # 	if (bit map display value != gray background)
 #		redo the randomize
 #	once good enemie spot found store x, y in memory
-#	exit newenemieLocation
+#	exit newLocation
 # }
-newenemieLocation:
+newLocation:
 	addiu 	$sp, $sp, -24	# allocate 24 bytes for stack
 	sw 	$fp, 0($sp)	# store caller's frame pointer
 	sw 	$ra, 4($sp)	# store caller's return address
